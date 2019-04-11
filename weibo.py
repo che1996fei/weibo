@@ -1,14 +1,19 @@
 import requests
 from urllib.parse import urlencode
 from pyquery import PyQuery as pq
+from pymongo import MongoClient
 
 base_url = 'https://m.weibo.cn/api/container/getIndex?'
 headers = {
     'Host': 'm.weibo.cn',
     'Referer': 'https://m.weibo.cn/u/2779895470',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
     'X-Requested-With': 'XMLHttpRequest',
 }
+
+client = MongoClient()
+db = client['weibo']
+collection = db['weibo']
 
 def get_page(page):
     params = {
@@ -39,7 +44,9 @@ def parse_page(json):
             weibo['转发'] = item.get('reposts_count')
             yield weibo
 
-
+def save_to_mongo(result):
+    if collection.insert_one(result):
+        print('Saved to Mongo')
 
 
 if __name__ == '__main__':
@@ -47,4 +54,4 @@ if __name__ == '__main__':
         json = get_page(page)
         results = parse_page(json)
         for result in results:
-            print(result)
+            save_to_mongo(result)
