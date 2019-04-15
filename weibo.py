@@ -3,7 +3,9 @@ from urllib.parse import urlencode
 from pyquery import PyQuery as pq
 from pymongo import MongoClient
 
-base_url = 'https://m.weibo.cn/api/container/getIndex?'
+base_url = 'https://m.weibo.cn/api/container/getIndex?' #表示url的前半部分
+
+#定义headers
 headers = {
     'Host': 'm.weibo.cn',
     'Referer': 'https://m.weibo.cn/u/2779895470',
@@ -11,10 +13,12 @@ headers = {
     'X-Requested-With': 'XMLHttpRequest',
 }
 
+
 client = MongoClient()
 db = client['weibo']
 collection = db['weibo']
 
+# 请求网页
 def get_page(page):
     params = {
         'type': 'uid',
@@ -22,15 +26,15 @@ def get_page(page):
         'containerid': '1076032779895470',
         'page': page
     }
-    url = base_url + urlencode(params)
+    url = base_url + urlencode(params) #用urlencode()将参数转化为url的GET请求参数，并合并成完整的url
     try:
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
-            return response.json()
+            return response.json() #解析为JSON
     except requests.ConnectionError as e:
         print('Error', e.args)
 
-
+# 定义一个解析方法
 def parse_page(json):
     if json:
         items = json.get('data').get('cards')
@@ -43,7 +47,7 @@ def parse_page(json):
             weibo['评论'] = item.get('comments_count')
             weibo['转发'] = item.get('reposts_count')
             yield weibo
-
+# 保存到MongoDB中
 def save_to_mongo(result):
     if collection.insert_one(result):
         print('Saved to Mongo')
