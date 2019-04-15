@@ -27,7 +27,7 @@ def get_page(page):
     except requests.ConnectionError as e:
         print('Error', e.args)
 
-
+#定义一个解析方法并保存为TXT文件
 def parse_page(json):
     if json:
         items = json.get('data').get('cards')
